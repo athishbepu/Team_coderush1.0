@@ -39,11 +39,9 @@
         const password = document.getElementById('password').value;
         console.log("Password received:", password);
         // Here you would typically handle the login logic, such as sending the data to the server
+        return {"success": True, "message": "Login successful!", "redirect": "/chat"};
       });
     </script>
   </body>
 </html>
-print("Username from form:", username)
-print("Password from form:", password)
-print("User from DB:", user)
-print("Password from DB:", user[4] if user else None)
+
