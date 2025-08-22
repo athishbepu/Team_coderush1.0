@@ -27,12 +27,17 @@ function appendMessage(text, who = 'bot') {
   wrap.appendChild(bubble);
   chatBody.appendChild(wrap);
   chatBody.scrollTop = chatBody.scrollHeight;
+  // Speak bot response if needed
+  if (who === 'bot' && window.speakBotResponse) {
+    speakBotResponse(text);
+  }
 }
 
-function setTyping(on) { typingEl.style.display = on ? 'block' : 'none'; }
+let lastInputWasAudio = false;
 
 // Send message
 async function sendMessage() {
+  window.speakBotResponse = undefined;
   let message = msgInput.value.trim();
   const lang = langSelect.value;
   if (!message) return;
@@ -58,6 +63,17 @@ async function sendMessage() {
     }
   }
   appendMessage(displayMessage, 'user');
+  // If last input was audio, enable bot speech for this response
+  if (lastInputWasAudio) {
+    window.speakBotResponse = function(text) {
+      const synth = window.speechSynthesis;
+      if (!synth) return;
+      let utter = new SpeechSynthesisUtterance(text);
+      utter.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
+      synth.speak(utter);
+    };
+    lastInputWasAudio = false;
+  }
   msgInput.value = '';
   setTyping(true);
 
@@ -194,6 +210,7 @@ function transcribeOnce() {
     msgInput.value = transcript;
     msgInput.focus();
     setTyping(false);
+    lastInputWasAudio = true;
   };
   recognition.onerror = function (event) {
     showError('Mic/Transcription error: ' + event.error);
