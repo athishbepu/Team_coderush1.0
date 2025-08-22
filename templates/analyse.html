@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Virtual Doctor – Analyse</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../static/analyse/analyse.css" />
+  </head>
+  <body>
+    <div class="chat-wrapper">
+      <div class="chat-card">
+        <div class="chat-header d-flex align-items-center justify-content-between">
+          <div class="dot"></div>
+          <div class="flex-grow-1 text-center">
+            <h5 class="m-0">
+              <i class="bi bi-bar-chart-line"></i> Health Analytics
+            </h5>
+            <small class="text-secondary">Analyse · Health details · Insights</small>
+          </div>
+          <div class="ms-auto d-flex controls">
+            <a href="/dashboard" class="btn btn-primary mx-2">
+              <i class="bi bi-chat-dots"></i> Back to Chat
+            </a>
+          </div>
+        </div>
+        <div class="chat-body">
+          <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-person-lines-fill"></i> Enter Your Health Details
+              </h6>
+            </div>
+            <div class="card-body">
+              <form id="analyseForm" class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label">Age</label>
+                  <input
+                    type="number"
+                    name="age"
+                    class="form-control"
+                    placeholder="Age"
+                    required
+                  />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Weight (kg)</label>
+                  <input
+                    type="number"
+                    name="weight"
+                    class="form-control"
+                    placeholder="Weight"
+                    required
+                  />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Height (cm)</label>
+                  <input
+                    type="number"
+                    name="height"
+                    class="form-control"
+                    placeholder="Height"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Blood Pressure (Systolic)</label>
+                  <input
+                    type="number"
+                    name="bp_systolic"
+                    class="form-control"
+                    placeholder="Systolic (e.g. 120)"
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Blood Pressure (Diastolic)</label>
+                  <input
+                    type="number"
+                    name="bp_diastolic"
+                    class="form-control"
+                    placeholder="Diastolic (e.g. 80)"
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Heart Rate (bpm)</label>
+                  <input
+                    type="number"
+                    name="heart_rate"
+                    class="form-control"
+                    placeholder="Heart Rate (e.g. 72)"
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Blood Sugar (mg/dL)</label>
+                  <input
+                    type="number"
+                    name="blood_sugar"
+                    class="form-control"
+                    placeholder="Blood Sugar (e.g. 90)"
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Cholesterol (mg/dL)</label>
+                  <input
+                    type="number"
+                    name="cholesterol"
+                    class="form-control"
+                    placeholder="Cholesterol (e.g. 180)"
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Physical Activity Level</label>
+                  <select name="activity_level" class="form-control">
+                    <option value="">Select</option>
+                    <option value="sedentary">Sedentary</option>
+                    <option value="light">Light</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="active">Active</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Diet Type</label>
+                  <select name="diet_type" class="form-control">
+                    <option value="">Select</option>
+                    <option value="vegetarian">Vegetarian</option>
+                    <option value="non-vegetarian">Non-Vegetarian</option>
+                    <option value="vegan">Vegan</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Symptoms</label>
+                  <input
+                    type="text"
+                    name="symptoms"
+                    class="form-control"
+                    placeholder="Symptoms (comma separated)"
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Habits</label>
+                  <input
+                    type="text"
+                    name="habits"
+                    class="form-control"
+                    placeholder="Habits (e.g. smoking, exercise)"
+                  />
+                </div>
+                <div class="col-12 text-center">
+                  <button type="submit" class="btn btn-success px-4">
+                    <i class="bi bi-graph-up-arrow"></i> Analyse
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-activity"></i> Your Health Analytics
+              </h6>
+            </div>
+            <div class="card-body" id="analyticsGraphs">
+              <div class="text-muted">
+                Fill the form and click Analyse to see your results.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../static/analyse/analyse.js"></script>
+  </body>
+</html>

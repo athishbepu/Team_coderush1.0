@@ -68,6 +68,7 @@ def register():
             return {"success": False, "message": f"Registration failed: {str(e)}"}
     return render_template('register.html')
 
+            
 # ------------------ LOGIN ------------------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -90,7 +91,7 @@ def login():
             user = cursor.fetchone()
             print(type(user))
             print("DEBUG: Query executed. Result:", user)
-            if user.values():
+            if user and hasattr(user, 'values') and user.values():
                 print("user value",user.values())
                 columns = [col[0] for col in cursor.description]
                 user_dict = dict(zip(columns, user.values()))
@@ -251,6 +252,103 @@ def ollama_response(prompt, model="mistral"):
     else:
         print("Ollama error:", response.text)
         return "Sorry, the assistant is unavailable."
+
+# ------------------ ANALYSE ------------------
+@app.route('/analyse', methods=['GET', 'POST'])
+def analyse():
+    if request.method == 'POST':
+        data = request.get_json()
+        age = int(data.get('age', 0))
+        weight = float(data.get('weight', 0))
+        height = float(data.get('height', 0))
+        symptoms = data.get('symptoms', '')
+        habits = data.get('habits', '')
+        bp_systolic = int(data.get('bp_systolic', 0))
+        bp_diastolic = int(data.get('bp_diastolic', 0))
+        heart_rate = int(data.get('heart_rate', 0))
+        blood_sugar = float(data.get('blood_sugar', 0))
+        cholesterol = float(data.get('cholesterol', 0))
+        activity_level = data.get('activity_level', '')
+        diet_type = data.get('diet_type', '')
+        text = symptoms  # Use symptoms as chat history text
+        triage_result = run_triage(text)
+        # Example analytics: BMI
+        bmi = round(weight / ((height/100)**2), 2) if height > 0 else 0
+        if bmi < 18.5:
+            bmi_status = 'Underweight'
+        elif bmi < 25:
+            bmi_status = 'Normal'
+        elif bmi < 30:
+            bmi_status = 'Overweight'
+        else:
+            bmi_status = 'Obese'
+        # Example risk score (simple logic)
+        risk_score = 0
+        if 'smoking' in habits.lower():
+            risk_score += 2
+        if 'exercise' not in habits.lower():
+            risk_score += 1
+        if age > 50:
+            risk_score += 1
+        if 'fever' in symptoms.lower():
+            risk_score += 1
+
+        # Hypertension analysis
+        hypertension = 'Normal'
+        if bp_systolic >= 140 or bp_diastolic >= 90:
+            hypertension = 'High'
+        elif bp_systolic >= 120 or bp_diastolic >= 80:
+            hypertension = 'Elevated'
+
+        # Diabetes analysis
+        diabetes = 'Normal'
+        if blood_sugar >= 126:
+            diabetes = 'Diabetes'
+        elif blood_sugar >= 100:
+            diabetes = 'Prediabetes'
+
+        # Cholesterol analysis
+        cholesterol_status = 'Normal'
+        if cholesterol >= 240:
+            cholesterol_status = 'High'
+        elif cholesterol >= 200:
+            cholesterol_status = 'Borderline High'
+        user_id = session.get('id')
+        cursor = mysql.connection.cursor()
+        # Store in MySQL
+        cursor.execute('''
+            INSERT INTO analyse_data (
+                user_id, age, weight, height, symptoms, habits, bmi, bmi_status, risk_score,
+                bp_systolic, bp_diastolic, heart_rate, blood_sugar, cholesterol, activity_level, diet_type,
+                hypertension, diabetes, cholesterol_status
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (
+            user_id, age, weight, height, symptoms, habits, bmi, bmi_status, risk_score,
+            bp_systolic, bp_diastolic, heart_rate, blood_sugar, cholesterol, activity_level, diet_type,
+            hypertension, diabetes, cholesterol_status
+        ))
+        mysql.connection.commit()
+        return jsonify({
+            'bmi': bmi,
+            'bmi_status': bmi_status,
+            'risk_score': risk_score,
+            'weight': weight,
+            'age': age,
+            'height': height,
+            'bp_systolic': bp_systolic,
+            'bp_diastolic': bp_diastolic,
+            'heart_rate': heart_rate,
+            'blood_sugar': blood_sugar,
+            'cholesterol': cholesterol,
+            'activity_level': activity_level,
+            'diet_type': diet_type,
+            'hypertension': hypertension,
+            'diabetes': diabetes,
+            'cholesterol_status': cholesterol_status,
+            'symptoms': symptoms,
+            'habits': habits
+        })
+    return render_template('analyse.html')
 
 
 if __name__ == '__main__':

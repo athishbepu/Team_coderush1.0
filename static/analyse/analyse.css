@@ -1,0 +1,134 @@
+@import url('../chat/chat.css');
+
+body, .chat-wrapper {
+  background: #181f2a;
+  color: #e0e6f0;
+}
+
+.chat-card {
+  background: #232a39;
+  color: #e0e6f0;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+}
+
+.card, .card-header, .card-body {
+  background: #232a39 !important;
+  color: #e0e6f0 !important;
+  border: none;
+}
+
+.card-header {
+  border-bottom: 1px solid #222b3a;
+  background: #232a39 !important;
+  color: #bfc8e6 !important;
+}
+
+.form-label {
+  color: #bfc8e6;
+}
+
+.form-control {
+  background: #181f2a;
+  color: #e0e6f0;
+  border: 1px solid #2c3446;
+}
+
+.form-control:focus {
+  background: #232a39;
+  color: #fff;
+  border-color: #36a2eb;
+}
+
+.btn-success {
+  background: #36a2eb;
+  border: none;
+  color: #fff;
+}
+
+.btn-success:hover {
+  background: #2580c3;
+}
+
+.analyse-container {
+    max-width: 700px;
+    margin: 40px auto;
+    background: #232a39;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    padding: 32px 24px;
+}
+
+.analyse-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #36a2eb;
+    margin-bottom: 24px;
+    letter-spacing: 0.5px;
+}
+
+.analyse-section {
+    margin-bottom: 28px;
+}
+
+.analyse-label {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #bfc8e6;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.analyse-input,
+.analyse-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #2c3446;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: #181f2a;
+    color: #e0e6f0;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+}
+
+.analyse-input:focus,
+.analyse-textarea:focus {
+    border-color: #36a2eb;
+    outline: none;
+}
+
+.analyse-btn {
+    background: linear-gradient(90deg, #2a5bd7 0%, #4f8cff 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 28px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1px 6px rgba(42, 91, 215, 0.12);
+    transition: background 0.2s;
+}
+
+.analyse-btn:hover {
+    background: linear-gradient(90deg, #1e3c72 0%, #2a5bd7 100%);
+}
+
+.analyse-result {
+    background: #eaf1fb;
+    border-left: 4px solid #2a5bd7;
+    padding: 18px 20px;
+    border-radius: 8px;
+    color: #23408e;
+    font-size: 1.05rem;
+    margin-top: 18px;
+}
+
+#analyticsGraphs {
+  background: #232a39;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  color: #e0e6f0;
+}
