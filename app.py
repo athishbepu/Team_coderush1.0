@@ -96,10 +96,10 @@ def api_chat():
 
     # Save message to DB
     cursor = mysql.connection.cursor()
-    cursor.execute("""
-        INSERT INTO messages (encounter_id, role, text)
-        VALUES (%s, %s, %s)
-    """, (encounter_id, 'user', text))
+    cursor.execute(
+        "INSERT INTO messages (encounter_id, role, text) VALUES (%s, %s, %s)",
+        (encounter_id, 'user', text)
+    )
     mysql.connection.commit()
 
     # Run triage logic
@@ -134,6 +134,16 @@ def api_abdm_mock_link():
     abha_number = data.get('abha_number')
     # Save abha_number to encounter if needed
     return {"status": "linked (sandbox)"}
+
+@app.route('/api/start_encounter', methods=['POST'])
+def start_encounter():
+    user_id = session.get('id')
+    locale = request.json.get('locale', 'en')
+    cursor = mysql.connection.cursor()
+    cursor.execute("INSERT INTO encounters (user_id, locale) VALUES (%s, %s)", (user_id, locale))
+    mysql.connection.commit()
+    encounter_id = cursor.lastrowid
+    return jsonify({"encounter_id": encounter_id})
 
 def run_triage(text):
     with open('rules/red_flags.json', 'r') as f:

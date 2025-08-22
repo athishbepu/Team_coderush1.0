@@ -22,7 +22,7 @@ function appendMessage(text, who = 'bot') {
   avatar.innerHTML = who === 'user' ? '<i class="bi bi-person"></i>' : '<i class="bi bi-robot"></i>';
   const bubble = document.createElement('div');
   bubble.className = 'bubble';
-  bubble.textContent = text;
+  bubble.innerHTML = text;
   wrap.appendChild(avatar);
   wrap.appendChild(bubble);
   chatBody.appendChild(wrap);
@@ -208,7 +208,6 @@ function transcribeOnce() {
 let encounterId = null;
 
 window.onload = async function() {
-  // Start a new encounter when chat loads
   const res = await fetch('/api/start_encounter', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
