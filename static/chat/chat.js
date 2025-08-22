@@ -67,7 +67,7 @@ async function sendMessage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        encounter_id: 1, // Replace with actual encounter_id if available
+        encounter_id: encounterId,
         locale: lang,
         text: message
       })
@@ -203,6 +203,19 @@ function transcribeOnce() {
     setTyping(false);
   };
   recognition.start();
+}
+
+let encounterId = null;
+
+window.onload = async function() {
+  // Start a new encounter when chat loads
+  const res = await fetch('/api/start_encounter', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ locale: langSelect.value })
+  });
+  const data = await res.json();
+  encounterId = data.encounter_id;
 }
 
 // Events
