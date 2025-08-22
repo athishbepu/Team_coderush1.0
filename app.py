@@ -1,12 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_mysqldb import MySQL
-from flask_bcrypt import Bcrypt
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 
 mysql = MySQL(app)
-bcrypt = Bcrypt(app)
 
 # ------------------ ROUTES ------------------
 @app.route('/')
@@ -17,46 +15,49 @@ def home():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        phone = request.form.get('phone')
-        password = request.form.get('password')
-        age = request.form.get('age')
-        gender = request.form.get('gender')
-        location = request.form.get('location')
+        data = request.get_json()
+        name = data.get('name')
+        email = data.get('email')
+        phone = data.get('phone')
+        password = data.get('password')
+        age = data.get('age')
+        gender = data.get('gender')
+        location = data.get('location')
         if not password:
-            flash('Password cannot be empty.', 'danger')
-            return render_template('register.html')
-        hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
+            return {"success": False, "message": "Password cannot be empty."}
         cursor = mysql.connection.cursor()
         cursor.execute("""
             INSERT INTO users (name, email, phone, password, age, gender, location)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (name, email, phone, hashed_pw, age, gender, location))
+        """, (name, email, phone, password, age, gender, location))
         mysql.connection.commit()
-        flash('Registration successful! Please log in.', 'success')
-        return redirect(url_for('login'))
+        return {"success": True, "message": "Registration successful!"}
     return render_template('register.html')
 
 # ------------------ LOGIN ------------------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
         cursor = mysql.connection.cursor()
         cursor.execute("""
             SELECT * FROM users WHERE email=%s OR phone=%s
         """, (username, username))
         user = cursor.fetchone()
-        if user and bcrypt.check_password_hash(user[4], password):
+        print("User:", user)
+        if not user:
+            return {"success": False, "message": "Invalid credentials."}
+        print("Password from DB:", user[4])
+        print("Password from form:", password)
+        if user[4] == password:
             session['loggedin'] = True
             session['id'] = user[0]
             session['name'] = user[1]
-            flash('Login successful!', 'success')
-            return redirect(url_for('dashboard'))
+            return {"success": True, "message": "Login successful!"}
         else:
-            flash('Invalid credentials. Please try again.', 'danger')
+            return {"success": False, "message": "Invalid credentials."}
     return render_template('login.html')
 
 # ------------------ DASHBOARD ------------------
