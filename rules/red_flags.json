@@ -1,0 +1,9 @@
+[
+  {"pattern": ["chest pain","pressure chest","severe chest"], "min_age": 18, "triage": "emergency", "message": "Possible cardiac emergency."},
+  {"pattern": ["shortness of breath","breathing difficulty"], "triage": "emergency"},
+  {"pattern": ["fainting","loss of consciousness"], "triage": "emergency"},
+  {"pattern": ["one sided weakness","face droop","slurred speech"], "triage": "emergency"},
+  {"pattern": ["severe bleeding","vomiting blood","black stools"], "triage": "emergency"},
+  {"pattern": ["high fever > 39","stiff neck"], "triage": "urgent"},
+  {"pattern": ["pregnant" , "bleeding"], "triage": "urgent"}
+]

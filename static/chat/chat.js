@@ -34,24 +34,48 @@ function setTyping(on) { typingEl.style.display = on ? 'block' : 'none'; }
 // Send message
 async function sendMessage() {
   const message = msgInput.value.trim();
+  const lang = langSelect.value;
   if (!message) return;
   appendMessage(message, 'user');
   msgInput.value = '';
   setTyping(true);
 
+  // Send message to backend
   try {
-    const res = await fetch('/api/chat', {
+    const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, lang: langSelect.value })
+      body: JSON.stringify({
+        encounter_id: 1, // Replace with actual encounter_id if available
+        locale: lang,
+        text: message
+      })
     });
-    if (!res.ok) throw new Error('API error: ' + res.status);
-    const data = await res.json();
-    appendMessage(data.response || '…');
+    const data = await response.json();
+
+    // Hide typing indicator
+    setTyping(false);
+
+    // Show bot response
+    appendMessage(data.disposition || "Sorry, I didn't understand.");
+
+    // Show next questions if any
+    if (data.questions_next && data.questions_next.length > 0) {
+      data.questions_next.forEach(q => appendMessage(q));
+    }
+
+    // Show triage level
+    if (data.triage_level) {
+      appendMessage(`Triage Level: ${data.triage_level}`);
+    }
+
+    // Show telemedicine link
+    if (data.telemedicine && data.telemedicine.url) {
+      appendMessage(`<a href="${data.telemedicine.url}" target="_blank">${data.telemedicine.label}</a>`);
+    }
   } catch (err) {
     console.error(err);
-    showError('Failed to send message. Check server.');
-  } finally {
+    showError("Server error. Try again.");
     setTyping(false);
   }
 }
