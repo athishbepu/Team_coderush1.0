@@ -27,8 +27,8 @@ function appendMessage(text, who = 'bot') {
   wrap.appendChild(bubble);
   chatBody.appendChild(wrap);
   chatBody.scrollTop = chatBody.scrollHeight;
-  // Always speak bot response
-  if (who === 'bot') {
+  // Speak bot response if needed
+  if (who === 'bot' && window.speakBotResponse) {
     speakBotResponse(text);
   }
 }
@@ -247,7 +247,12 @@ btnMic.addEventListener('click', transcribeOnce);
 langSelect.addEventListener('change', () => {
   appendMessage(
     langSelect.value === 'hi' ? 'भाषा हिंदी पर सेट की गई है।' :
+      langSelect.value === 'ta' ? 'மொழி தமிழ் ஆக மாற்றப்பட்டது.' :
         'Language set to English.'
   );
 });
 
+function setTyping(on) {
+  const typingEl = document.getElementById('typing');
+  if (typingEl) typingEl.style.display = on ? 'block' : 'none';
+}
