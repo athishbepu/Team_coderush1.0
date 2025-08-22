@@ -1,3 +1,11 @@
+// Speak bot response using browser TTS
+function speakBotResponse(text) {
+  if ('speechSynthesis' in window && text) {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langSelect.value === 'hi' ? 'hi-IN' : langSelect.value === 'ta' ? 'ta-IN' : 'en-US';
+    window.speechSynthesis.speak(utter);
+  }
+}
 const chatBody = document.getElementById('chatBody');
 const msgInput = document.getElementById('msgInput');
 const btnSend = document.getElementById('btnSend');
@@ -27,6 +35,11 @@ function appendMessage(text, who = 'bot') {
   wrap.appendChild(bubble);
   chatBody.appendChild(wrap);
   chatBody.scrollTop = chatBody.scrollHeight;
+  // Always speak bot response
+  if (who === 'bot') {
+    console.log('Speaking bot response:', text);
+    speakBotResponse(text);
+  }
 }
 
 function setTyping(on) { typingEl.style.display = on ? 'block' : 'none'; }
@@ -61,7 +74,6 @@ async function sendMessage() {
   msgInput.value = '';
   setTyping(true);
 
-  // Send message to backend
   try {
     const response = await fetch('/api/chat', {
       method: 'POST',
@@ -72,70 +84,11 @@ async function sendMessage() {
         text: message
       })
     });
-    let data = await response.json();
-
-    // Hide typing indicator
+    const data = await response.json();
+    appendMessage(data.disposition, 'bot');
     setTyping(false);
+    speakBotResponse(data.disposition);
 
-    // If Hindi, translate output to Hindi before displaying
-    async function translateToHindi(text) {
-      try {
-        const res = await fetch('https://libretranslate.de/translate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            q: text,
-            source: 'en',
-            target: 'hi',
-            format: 'text'
-          })
-        });
-        const result = await res.json();
-        return result.translatedText || text;
-      } catch (err) {
-        showError('Output translation error. Showing original text.');
-        return text;
-      }
-    }
-
-    if (lang === 'hi') {
-      // Translate disposition
-      if (data.disposition) {
-        data.disposition = await translateToHindi(data.disposition);
-      }
-      // Translate questions_next
-      if (data.questions_next && data.questions_next.length > 0) {
-        for (let i = 0; i < data.questions_next.length; i++) {
-          data.questions_next[i] = await translateToHindi(data.questions_next[i]);
-        }
-      }
-      // Translate triage_level
-      if (data.triage_level) {
-        data.triage_level = await translateToHindi(`Triage Level: ${data.triage_level}`);
-      }
-      // Translate telemedicine label
-      if (data.telemedicine && data.telemedicine.label) {
-        data.telemedicine.label = await translateToHindi(data.telemedicine.label);
-      }
-    }
-
-    // Show bot response
-    appendMessage(data.disposition || "Sorry, I didn't understand.");
-
-    // Show next questions if any
-    if (data.questions_next && data.questions_next.length > 0) {
-      data.questions_next.forEach(q => appendMessage(q));
-    }
-
-    // Show triage level
-    if (data.triage_level) {
-      appendMessage(data.triage_level);
-    }
-
-    // Show telemedicine link
-    if (data.telemedicine && data.telemedicine.url) {
-      appendMessage(`<a href="${data.telemedicine.url}" target="_blank">${data.telemedicine.label}</a>`);
-    }
   } catch (err) {
     console.error(err);
     showError("Server error. Try again.");
@@ -241,3 +194,35 @@ function setTyping(on) {
   const typingEl = document.getElementById('typing');
   if (typingEl) typingEl.style.display = on ? 'block' : 'none';
 }
+
+function appendBotTyping() {
+  const wrap = document.createElement('div');
+  wrap.className = 'message from-bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.innerHTML = '<i class="bi bi-robot"></i>';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = ''; // Start empty
+  wrap.appendChild(avatar);
+  wrap.appendChild(bubble);
+  chatBody.appendChild(wrap);
+  chatBody.scrollTop = chatBody.scrollHeight;
+  return bubble;
+}
+
+// Pull the latest Mistral model
+async function pullMistral() {
+  try {
+    const res = await fetch('/api/mistral/pull', { method: 'POST' });
+    if (!res.ok) throw new Error('Mistral pull failed');
+    const data = await res.json();
+    showError('Mistral model updated: ' + data.version);
+  } catch (err) {
+    showError('Mistral pull error: ' + err.message);
+  }
+}
+
+// Periodically pull Mistral model (e.g., every 6 hours)
+setInterval(pullMistral, 6 * 60 * 60 * 1000);
+

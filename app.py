@@ -1,4 +1,20 @@
+def ollama_response(prompt, model="mistral"):
+    url = "http://localhost:11434/api/generate"
+    payload = {
+        "model": model,
+        "prompt": prompt,
+        "stream": False
+    }
+    response = requests.post(url, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        return data["response"]
+    else:
+        print("Ollama error:", response.text)
+        return "Sorry, the assistant is unavailable."
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+import requests
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mysqldb import MySQL
 import json
 import re
@@ -37,13 +53,17 @@ def register():
             location = request.form.get('location')
         if not password:
             return {"success": False, "message": "Password cannot be empty."}
-        cursor = mysql.connection.cursor()
-        cursor.execute("""
-            INSERT INTO users (name, email, phone, password, age, gender, location)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (name, email, phone, password, age, gender, location))
-        mysql.connection.commit()
-        return {"success": True, "message": "Registration successful!"}
+        try:
+            cursor = mysql.connection.cursor()
+            hashed_password = generate_password_hash(password)
+            cursor.execute("""
+                INSERT INTO users (name, email, phone, password, age, gender, location)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (name, email, phone, hashed_password, age, gender, location))
+            mysql.connection.commit()
+            return {"success": True, "message": "Registration successful!"}
+        except Exception as e:
+            return {"success": False, "message": f"Registration failed: {str(e)}"}
     return render_template('register.html')
 
 # ------------------ LOGIN ------------------
@@ -59,22 +79,21 @@ def login():
             username = request.form.get('username')
             password = request.form.get('password')
             # print(username, password)
-        cursor = mysql.connection.cursor()
-        cursor.execute("""
-            SELECT * FROM users WHERE email=%s OR phone=%s
-        """, (username, username))
-        user = cursor.fetchone()
-        # print("Username from form:", username)
-        # print("Password from form:", password)
-        # print("User from DB:", user)
-        # print("Password from DB:", user['password'] if user else None)
-        if user and user['password'] == password:
-            session['loggedin'] = True
-            session['id'] = user['id']
-            session['name'] = user['name']
-            return {"success": True, "message": "Login successful!", "redirect": "/dashboard"}
-        else:
+        try:
+            cursor = mysql.connection.cursor()
+            cursor.execute("SELECT * FROM users WHERE email=%s OR phone=%s", (username, username))
+            user = cursor.fetchone()
+            if user:
+                desc = cursor.description
+                user_dict = {desc[i][0]: user[i] for i in range(len(user))}
+                if check_password_hash(user_dict['password'], password):
+                    session['loggedin'] = True
+                    session['id'] = user_dict['id']
+                    session['name'] = user_dict['name']
+                    return {"success": True, "message": "Login successful!", "redirect": "/dashboard"}
             return {"success": False, "message": "Invalid credentials."}
+        except Exception as e:
+            return {"success": False, "message": f"Login failed: {str(e)}"}
     return render_template('login.html')
 
 @app.route('/dashboard')
@@ -132,12 +151,16 @@ def api_chat():
         )
     mysql.connection.commit()
 
-    # Respond with triage info
+    # Prepare prompt for AI model
+    prompt = f"You are a virtual doctor assistant.if any other language than enlish reply in malayalam only \nChat history: {text}\nTriage: {triage_result['disposition']}\nPlease provide a helpful, safe, and context-aware response."
+    ai_reply = ollama_response(prompt, model="mistral")
+
+    # Respond with triage info and AI reply
     return jsonify({
         "questions_next": triage_result['questions_next'],
         "patient_summary": triage_result['summary'],
         "triage_level": triage_result['triage_level'],
-        "disposition": triage_result['disposition'],
+        "disposition": ai_reply,
         "watchouts": triage_result['watchouts'],
         "telemedicine": {
             "label": "Connect to eSanjeevani",
@@ -189,5 +212,26 @@ def run_triage(text):
         "watchouts": []
     }
 
+
 if __name__ == '__main__':
     app.run(debug=True)
+
+import requests
+
+def ollama_response(prompt, model="mistral"):
+    url = "http://localhost:11434/api/generate"
+    payload = {
+        "model": model,
+        "prompt": prompt,
+        "stream": False
+    }
+    response = requests.post(url, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        return data["response"]
+    else:
+        print("Ollama error:", response.text)
+        return "Sorry, the assistant is unavailable."
+
+# Example usage:
+print(ollama_response("What is the meaning of life?", model="mistral"))
