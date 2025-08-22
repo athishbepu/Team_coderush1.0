@@ -7,7 +7,7 @@
 
 /* Background image */
 .bg {
-  background: url('Bg.jpg') no-repeat center center ;
+  background: url('../Bg.jpg') no-repeat center center ;
   position: fixed; /* ensures it stays while scrolling */
   top: 0;
   left: 0;
