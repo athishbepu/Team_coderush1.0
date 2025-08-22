@@ -27,11 +27,6 @@ function appendMessage(text, who = 'bot') {
   wrap.appendChild(bubble);
   chatBody.appendChild(wrap);
   chatBody.scrollTop = chatBody.scrollHeight;
-  // Always speak bot response
-  if (who === 'bot') {
-    console.log('Speaking bot response:', text);
-    speakBotResponse(text);
-  }
 }
 
 function setTyping(on) { typingEl.style.display = on ? 'block' : 'none'; }
