@@ -1,6 +1,0 @@
-MYSQL_HOST = 'localhost'
-MYSQL_USER = 'root'
-MYSQL_PASSWORD = 'bepu'
-MYSQL_DB = 'virtual_doctor'
-MYSQL_CURSORCLASS = 'DictCursor'
-SECRET_KEY = 'supersecretkey'
