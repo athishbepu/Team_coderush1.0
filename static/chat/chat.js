@@ -1,3 +1,11 @@
+// Speak bot response using browser TTS
+function speakBotResponse(text) {
+  if ('speechSynthesis' in window && text) {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langSelect.value === 'hi' ? 'hi-IN' : langSelect.value === 'ta' ? 'ta-IN' : 'en-US';
+    window.speechSynthesis.speak(utter);
+  }
+}
 const chatBody = document.getElementById('chatBody');
 const msgInput = document.getElementById('msgInput');
 const btnSend = document.getElementById('btnSend');
@@ -27,7 +35,11 @@ function appendMessage(text, who = 'bot') {
   wrap.appendChild(bubble);
   chatBody.appendChild(wrap);
   chatBody.scrollTop = chatBody.scrollHeight;
-  
+  // Always speak bot response
+  if (who === 'bot') {
+    console.log('Speaking bot response:', text);
+    speakBotResponse(text);
+  }
 }
 
 function setTyping(on) { typingEl.style.display = on ? 'block' : 'none'; }
@@ -198,3 +210,19 @@ function appendBotTyping() {
   chatBody.scrollTop = chatBody.scrollHeight;
   return bubble;
 }
+
+// Pull the latest Mistral model
+async function pullMistral() {
+  try {
+    const res = await fetch('/api/mistral/pull', { method: 'POST' });
+    if (!res.ok) throw new Error('Mistral pull failed');
+    const data = await res.json();
+    showError('Mistral model updated: ' + data.version);
+  } catch (err) {
+    showError('Mistral pull error: ' + err.message);
+  }
+}
+
+// Periodically pull Mistral model (e.g., every 6 hours)
+setInterval(pullMistral, 6 * 60 * 60 * 1000);
+
