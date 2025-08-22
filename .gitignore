@@ -1,1 +1,15 @@
-config.py
+# Ignore IDE/project config files
+.idea/
+*.iml
+
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+*.log
+
+# Ignore sensitive configs
+config.json
+.env
