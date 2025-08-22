@@ -13,6 +13,23 @@ function showError(msg) {
   toast.show();
 }
 
+// Text-to-Speech
+function speakBotResponse(text) {
+  const synth = window.speechSynthesis;
+  if (!synth || typeof SpeechSynthesisUtterance === 'undefined') {
+    showError('Text-to-speech is not supported in this browser.');
+    return;
+  }
+  try {
+    let utter = new SpeechSynthesisUtterance(text);
+    const lang = langSelect.value === 'hi' ? 'hi-IN' : 'en-US';
+    utter.lang = lang;
+    synth.speak(utter);
+  } catch (err) {
+    showError('Failed to speak response.');
+  }
+}
+
 // Append chat message
 function appendMessage(text, who = 'bot') {
   const wrap = document.createElement('div');
@@ -27,8 +44,8 @@ function appendMessage(text, who = 'bot') {
   wrap.appendChild(bubble);
   chatBody.appendChild(wrap);
   chatBody.scrollTop = chatBody.scrollHeight;
-  // Speak bot response if needed
-  if (who === 'bot' && window.speakBotResponse) {
+  // Always speak bot response
+  if (who === 'bot') {
     speakBotResponse(text);
   }
 }
