@@ -35,12 +35,21 @@
           </div>
           <button type="submit">Login</button>
           <p class="signup-text">
-            Don’t have an account? <a href="register.html">Sign Up</a>
             Don’t have an account? <a href="{{ url_for('register') }}">Sign Up</a>
           </p>
         </form>
-      </div>
+      </div>  
     </main>
     <script src="../static/login/login.js"></script>
+    <script>
+      // This script is for debugging purposes to ensure the password is being captured
+      const form = document.getElementById('loginForm');
+      form.addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the form from submitting immediately
+        const password = document.getElementById('password').value;
+        console.log("Password received:", password);
+        // Here you would typically handle the login logic, such as sending the data to the server
+      });
+    </script>
   </body>
 </html>

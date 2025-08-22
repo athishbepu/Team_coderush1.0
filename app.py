@@ -19,21 +19,25 @@ def home():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        name = request.form['name']
-        email = request.form['email']
-        phone = request.form['phone']
-        password = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')
-        age = request.form['age']
-        gender = request.form['gender']
-        location = request.form['location']
+        name = request.form.get('name')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        password = request.form.get('password')
+        age = request.form.get('age')
+        gender = request.form.get('gender')
+        location = request.form.get('location')
+
+        # Hash password
+        hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
 
         cursor = mysql.connection.cursor()
         cursor.execute("""
             INSERT INTO users (name, email, phone, password, age, gender, location)
-            VALUES (%s,%s,%s,%s,%s,%s,%s)
-        """, (name, email, phone, password, age, gender, location))
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (name, email, phone, hashed_pw, age, gender, location))
         mysql.connection.commit()
-        flash("Registration successful! Please login.", "success")
+
+        flash('Registration successful! Please log in.', 'success')
         return redirect(url_for('login'))
     return render_template('register.html')
 
