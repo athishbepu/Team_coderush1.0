@@ -79,5 +79,42 @@
 
   <!-- Custom JS -->
   <script src="../static/chat/chat.js"></script>
+  <script>
+    let encounterId = null;
+    window.onload = async function() {
+      const res = await fetch('/api/start_encounter', { method: 'POST' });
+      const data = await res.json();
+      encounterId = data.encounter_id;
+    };
+
+    async function sendMessage(message, lang) {
+      // Append user message to chat
+      appendMessage('user', message);
+
+      // Send message to server
+      const res = await fetch('/api/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          encounter_id: encounterId,
+          locale: lang,
+          text: message
+        })
+      });
+
+      const data = await res.json();
+
+      // Check for errors
+      if (data.error) {
+        showError(data.error);
+        return;
+      }
+
+      // Append bot response to chat
+      appendMessage('bot', data.reply);
+    }
+  </script>
 </body>
 </html>
