@@ -22,7 +22,7 @@ function appendMessage(text, who = 'bot') {
   avatar.innerHTML = who === 'user' ? '<i class="bi bi-person"></i>' : '<i class="bi bi-robot"></i>';
   const bubble = document.createElement('div');
   bubble.className = 'bubble';
-  bubble.innerHTML = text;
+  bubble.textContent = text;
   wrap.appendChild(avatar);
   wrap.appendChild(bubble);
   chatBody.appendChild(wrap);
