@@ -171,5 +171,39 @@ button:hover {
     padding: 8px 14px;
   }
 
-  .login-text {
-    font
+.login-text {
+  font-size: 11px;
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: 20px;
+  }
+
+  .top h1 {
+    font-size: 20px;
+  }
+
+  .top p {
+    font-size: 12px;
+  }
+
+  label {
+    font-size: 12px;
+  }
+
+  input {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+
+  button {
+    font-size: 13px;
+    padding: 8px 14px;
+  }
+
+  .signup-text {
+    font-size: 11px;
+  }
+}
+}
