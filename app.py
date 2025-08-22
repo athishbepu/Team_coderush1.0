@@ -87,10 +87,22 @@ def chat():
 def login_page():
     return render_template('login.html')
 
+def extract_symptoms(text):
+    # Simple example: extract keywords from red flag patterns
+    with open('rules/red_flags.json', 'r') as f:
+        rules = json.load(f)
+    found = []
+    text_lower = text.lower()
+    for rule in rules:
+        for pattern in rule['pattern']:
+            if pattern in text_lower:
+                found.append(pattern)
+    return found
+
 @app.route('/api/chat', methods=['POST'])
 def api_chat():
     data = request.get_json()
-    encounter_id = data.get('encounter_id', 1)  # Use actual encounter_id if available
+    encounter_id = data.get('encounter_id')
     locale = data.get('locale', 'en')
     text = data.get('text', '')
 
@@ -109,6 +121,15 @@ def api_chat():
     cursor.execute("""
         UPDATE encounters SET risk_level=%s, disposition_text=%s WHERE id=%s
     """, (triage_result['triage_level'], triage_result['disposition'], encounter_id))
+    mysql.connection.commit()
+
+    # Extract and save symptoms
+    symptoms = extract_symptoms(text)
+    for symptom in symptoms:
+        cursor.execute(
+            "INSERT INTO symptoms (encounter_id, name, present) VALUES (%s, %s, %s)",
+            (encounter_id, symptom, 1)
+        )
     mysql.connection.commit()
 
     # Respond with triage info
