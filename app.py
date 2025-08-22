@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_mysqldb import MySQL
 from flask_bcrypt import Bcrypt
 import MySQLdb.cursors
+from datetime import datetime
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
@@ -36,23 +37,102 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
+from datetime import datetime
+
+# ------------------ API: Stateful Chat ------------------
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
+    if 'loggedin' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json
+    encounter_id = data.get('encounter_id')
+    message = data.get('message')
+    user_id = session['id']
+
+    # Save message
+    cursor = mysql.connection.cursor()
+    cursor.execute("""
+        INSERT INTO messages (encounter_id, role, text, ts)
+        VALUES (%s, %s, %s, %s)
+    """, (encounter_id, 'user', message, datetime.now()))
+    mysql.connection.commit()
+
+    # Dummy bot response (expand with symptom collection logic)
+    bot_reply = "Thank you for sharing. Can you tell me more about your symptoms?"
+
+    cursor.execute("""
+        INSERT INTO messages (encounter_id, role, text, ts)
+        VALUES (%s, %s, %s, %s)
+    """, (encounter_id, 'assistant', bot_reply, datetime.now()))
+    mysql.connection.commit()
+
+    return jsonify({"response": bot_reply})
+
+# ------------------ API: Triage ------------------
+@app.route('/api/triage', methods=['POST'])
+def api_triage():
+    data = request.json
+    symptoms = data.get('symptoms', [])
+    # Load red-flag rules from JSON (implement actual logic)
+    # For demo, if "chest pain" in symptoms, mark as emergency
+    risk_level = "routine"
+    disposition = "You can manage at home. Watch for worsening symptoms."
+    disclaimer = "This is not medical advice. Please consult a doctor if unsure."
+
+    if "chest pain" in [s.lower() for s in symptoms]:
+        risk_level = "emergency"
+        disposition = "Go to the ER immediately!"
+
+    return jsonify({
+        "risk_level": risk_level,
+        "disposition": disposition,
+        "disclaimer": disclaimer
+    })
+
+# ------------------ API: Transcribe (Whisper) ------------------
+@app.route('/api/transcribe', methods=['POST'])
+def api_transcribe():
+    # Accept audio file, return dummy text (replace with Whisper integration)
+    if 'audio' not in request.files:
+        return jsonify({"error": "No audio file provided"}), 400
+    # For demo, just return a static string
+    return jsonify({"text": "Transcribed text goes here."})
+
+# ------------------ API: Mock ABHA Create/Link ------------------
+@app.route('/api/abdm/mock/create', methods=['POST'])
+def api_abdm_mock_create():
+    # Return mock ABHA number
+    return jsonify({"abha_number": "ABHA1234567890"})
+
+@app.route('/api/abdm/mock/link', methods=['POST'])
+def api_abdm_mock_link():
+    # Return mock link status
+    return jsonify({"status": "linked"})
+
+# ------------------ API: Telemedicine Referral ------------------
+@app.route('/api/telemedicine/referral', methods=['GET'])
+def api_telemedicine_referral():
+    # Return eSanjeevani portal link
+    return jsonify({"url": "https://esanjeevani.mohfw.gov.in/"})
+
 # ------------------ LOGIN ------------------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
-        password_input = request.form['password']
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
+        username = request.form.get('username')
+        password = request.form.get('password')
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT * FROM users WHERE email=%s OR phone=%s", (username, username))
         user = cursor.fetchone()
-        if user and bcrypt.check_password_hash(user['password'], password_input):
+        if user and bcrypt.check_password_hash(user['password'], password):
             session['loggedin'] = True
             session['id'] = user['id']
             session['name'] = user['name']
             return redirect(url_for('dashboard'))
         else:
-            flash("Invalid email or password", "danger")
+            flash('Invalid credentials. Please try again.', 'danger')
+            return render_template('login.html')
     return render_template('login.html')
 
 # ------------------ DASHBOARD ------------------
