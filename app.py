@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_mysqldb import MySQL
 import json
 import re
+import requests
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
@@ -88,7 +89,6 @@ def login_page():
     return render_template('login.html')
 
 def extract_symptoms(text):
-    # Simple example: extract keywords from red flag patterns
     with open('rules/red_flags.json', 'r') as f:
         rules = json.load(f)
     found = []
@@ -106,7 +106,6 @@ def api_chat():
     locale = data.get('locale', 'en')
     text = data.get('text', '')
 
-    # Save message to DB
     cursor = mysql.connection.cursor()
     cursor.execute(
         "INSERT INTO messages (encounter_id, role, text) VALUES (%s, %s, %s)",
@@ -191,3 +190,7 @@ def run_triage(text):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+encounterId = data.encounter_id;
+console.log("Encounter ID:", encounterId);
+console.log("Chat response:", data);
