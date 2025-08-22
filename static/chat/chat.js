@@ -1,9 +1,9 @@
-const chatBody   = document.getElementById('chatBody');
-const msgInput   = document.getElementById('msgInput');
-const btnSend    = document.getElementById('btnSend');
-const btnRefer   = document.getElementById('btnRefer');
-const btnMic     = document.getElementById('btnMic');
-const typingEl   = document.getElementById('typing');
+const chatBody = document.getElementById('chatBody');
+const msgInput = document.getElementById('msgInput');
+const btnSend = document.getElementById('btnSend');
+const btnRefer = document.getElementById('btnRefer');
+const btnMic = document.getElementById('btnMic');
+const typingEl = document.getElementById('typing');
 const langSelect = document.getElementById('langSelect');
 
 // Bootstrap toast
@@ -33,10 +33,31 @@ function setTyping(on) { typingEl.style.display = on ? 'block' : 'none'; }
 
 // Send message
 async function sendMessage() {
-  const message = msgInput.value.trim();
+  let message = msgInput.value.trim();
   const lang = langSelect.value;
   if (!message) return;
-  appendMessage(message, 'user');
+  let displayMessage = message;
+  // If Hindi, translate input to English for backend
+  if (lang === 'hi') {
+    try {
+      setTyping(true);
+      const res = await fetch('https://libretranslate.de/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          q: message,
+          source: 'hi',
+          target: 'en',
+          format: 'text'
+        })
+      });
+      const data = await res.json();
+      message = data.translatedText || message;
+    } catch (err) {
+      showError('Input translation error. Processing original text.');
+    }
+  }
+  appendMessage(displayMessage, 'user');
   msgInput.value = '';
   setTyping(true);
 
@@ -51,10 +72,52 @@ async function sendMessage() {
         text: message
       })
     });
-    const data = await response.json();
+    let data = await response.json();
 
     // Hide typing indicator
     setTyping(false);
+
+    // If Hindi, translate output to Hindi before displaying
+    async function translateToHindi(text) {
+      try {
+        const res = await fetch('https://libretranslate.de/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            q: text,
+            source: 'en',
+            target: 'hi',
+            format: 'text'
+          })
+        });
+        const result = await res.json();
+        return result.translatedText || text;
+      } catch (err) {
+        showError('Output translation error. Showing original text.');
+        return text;
+      }
+    }
+
+    if (lang === 'hi') {
+      // Translate disposition
+      if (data.disposition) {
+        data.disposition = await translateToHindi(data.disposition);
+      }
+      // Translate questions_next
+      if (data.questions_next && data.questions_next.length > 0) {
+        for (let i = 0; i < data.questions_next.length; i++) {
+          data.questions_next[i] = await translateToHindi(data.questions_next[i]);
+        }
+      }
+      // Translate triage_level
+      if (data.triage_level) {
+        data.triage_level = await translateToHindi(`Triage Level: ${data.triage_level}`);
+      }
+      // Translate telemedicine label
+      if (data.telemedicine && data.telemedicine.label) {
+        data.telemedicine.label = await translateToHindi(data.telemedicine.label);
+      }
+    }
 
     // Show bot response
     appendMessage(data.disposition || "Sorry, I didn't understand.");
@@ -66,7 +129,7 @@ async function sendMessage() {
 
     // Show triage level
     if (data.triage_level) {
-      appendMessage(`Triage Level: ${data.triage_level}`);
+      appendMessage(data.triage_level);
     }
 
     // Show telemedicine link
@@ -95,21 +158,51 @@ async function referToDoctor() {
 }
 
 // Mic → /api/transcribe
-async function transcribeOnce() {
-  try {
-    const res = await fetch('/api/transcribe', { method: 'POST' });
-    if (!res.ok) throw new Error('Transcription failed');
-    const data = await res.json();
-    if (data.text) {
-      msgInput.value = data.text;
-      msgInput.focus();
-    } else {
-      showError('No speech recognized.');
-    }
-  } catch (e) {
-    console.error(e);
-    showError('Mic/Transcription error.');
+function transcribeOnce() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    showError('Speech recognition not supported in this browser.');
+    return;
   }
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = new SpeechRecognition();
+  recognition.lang = langSelect.value || 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  setTyping(true);
+  recognition.onresult = async function (event) {
+    let transcript = event.results[0][0].transcript;
+    if (langSelect.value === 'hi') {
+      // Translate to Hindi using LibreTranslate API
+      try {
+        setTyping(true);
+        const res = await fetch('https://libretranslate.de/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            q: transcript,
+            source: 'en',
+            target: 'hi',
+            format: 'text'
+          })
+        });
+        const data = await res.json();
+        transcript = data.translatedText || transcript;
+      } catch (err) {
+        showError('Translation error. Showing original text.');
+      }
+    }
+    msgInput.value = transcript;
+    msgInput.focus();
+    setTyping(false);
+  };
+  recognition.onerror = function (event) {
+    showError('Mic/Transcription error: ' + event.error);
+    setTyping(false);
+  };
+  recognition.onend = function () {
+    setTyping(false);
+  };
+  recognition.start();
 }
 
 // Events
@@ -125,7 +218,7 @@ btnMic.addEventListener('click', transcribeOnce);
 langSelect.addEventListener('change', () => {
   appendMessage(
     langSelect.value === 'hi' ? 'भाषा हिंदी पर सेट की गई है।' :
-    langSelect.value === 'ta' ? 'மொழி தமிழ் ஆக மாற்றப்பட்டது.' :
-    'Language set to English.'
+      langSelect.value === 'ta' ? 'மொழி தமிழ் ஆக மாற்றப்பட்டது.' :
+        'Language set to English.'
   );
 });
