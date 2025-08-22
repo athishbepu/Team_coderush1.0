@@ -27,6 +27,7 @@ function appendMessage(text, who = 'bot') {
   wrap.appendChild(bubble);
   chatBody.appendChild(wrap);
   chatBody.scrollTop = chatBody.scrollHeight;
+  
 }
 
 function setTyping(on) { typingEl.style.display = on ? 'block' : 'none'; }
@@ -61,7 +62,6 @@ async function sendMessage() {
   msgInput.value = '';
   setTyping(true);
 
-  // Send message to backend
   try {
     const response = await fetch('/api/chat', {
       method: 'POST',
@@ -72,70 +72,11 @@ async function sendMessage() {
         text: message
       })
     });
-    let data = await response.json();
-
-    // Hide typing indicator
+    const data = await response.json();
+    appendMessage(data.disposition, 'bot');
     setTyping(false);
+    speakBotResponse(data.disposition);
 
-    // If Hindi, translate output to Hindi before displaying
-    async function translateToHindi(text) {
-      try {
-        const res = await fetch('https://libretranslate.de/translate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            q: text,
-            source: 'en',
-            target: 'hi',
-            format: 'text'
-          })
-        });
-        const result = await res.json();
-        return result.translatedText || text;
-      } catch (err) {
-        showError('Output translation error. Showing original text.');
-        return text;
-      }
-    }
-
-    if (lang === 'hi') {
-      // Translate disposition
-      if (data.disposition) {
-        data.disposition = await translateToHindi(data.disposition);
-      }
-      // Translate questions_next
-      if (data.questions_next && data.questions_next.length > 0) {
-        for (let i = 0; i < data.questions_next.length; i++) {
-          data.questions_next[i] = await translateToHindi(data.questions_next[i]);
-        }
-      }
-      // Translate triage_level
-      if (data.triage_level) {
-        data.triage_level = await translateToHindi(`Triage Level: ${data.triage_level}`);
-      }
-      // Translate telemedicine label
-      if (data.telemedicine && data.telemedicine.label) {
-        data.telemedicine.label = await translateToHindi(data.telemedicine.label);
-      }
-    }
-
-    // Show bot response
-    appendMessage(data.disposition || "Sorry, I didn't understand.");
-
-    // Show next questions if any
-    if (data.questions_next && data.questions_next.length > 0) {
-      data.questions_next.forEach(q => appendMessage(q));
-    }
-
-    // Show triage level
-    if (data.triage_level) {
-      appendMessage(data.triage_level);
-    }
-
-    // Show telemedicine link
-    if (data.telemedicine && data.telemedicine.url) {
-      appendMessage(`<a href="${data.telemedicine.url}" target="_blank">${data.telemedicine.label}</a>`);
-    }
   } catch (err) {
     console.error(err);
     showError("Server error. Try again.");
@@ -240,4 +181,20 @@ langSelect.addEventListener('change', () => {
 function setTyping(on) {
   const typingEl = document.getElementById('typing');
   if (typingEl) typingEl.style.display = on ? 'block' : 'none';
+}
+
+function appendBotTyping() {
+  const wrap = document.createElement('div');
+  wrap.className = 'message from-bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.innerHTML = '<i class="bi bi-robot"></i>';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = ''; // Start empty
+  wrap.appendChild(avatar);
+  wrap.appendChild(bubble);
+  chatBody.appendChild(wrap);
+  chatBody.scrollTop = chatBody.scrollHeight;
+  return bubble;
 }

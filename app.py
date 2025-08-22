@@ -114,31 +114,34 @@ def api_chat():
     )
     mysql.connection.commit()
 
-    # Run triage logic
-    triage_result = run_triage(text)
+    # Get chat history
+    cursor.execute(
+        "SELECT role, text FROM messages WHERE encounter_id=%s ORDER BY ts ASC",
+        (encounter_id,)
+    )
+    messages = [{"role": row['role'], "content": row['text']} for row in cursor.fetchall()]
 
-    # Save triage to encounter (optional)
-    cursor.execute("""
-        UPDATE encounters SET risk_level=%s, disposition_text=%s WHERE id=%s
-    """, (triage_result['triage_level'], triage_result['disposition'], encounter_id))
-    mysql.connection.commit()
-
-    # Extract and save symptoms
     symptoms = extract_symptoms(text)
-    for symptom in symptoms:
-        cursor.execute(
-            "INSERT INTO symptoms (encounter_id, name, present) VALUES (%s, %s, %s)",
-            (encounter_id, symptom, 1)
-        )
+    system_prompt = (
+        "You are a virtual doctor assistant. "
+        "Given the following chat history and symptoms, provide a helpful, safe, and context-aware response. "
+        "If there are any emergencies, advise immediate action. Otherwise, ask relevant follow-up questions or provide guidance.\n\n"
+        f"Symptoms: {', '.join(symptoms)}"
+    )
+    mistral_messages = [{"role": "system", "content": system_prompt}] + messages
+
+    bot_reply = mistral_response(mistral_messages, model="mistral")
+
+    cursor.execute(
+        "INSERT INTO messages (encounter_id, role, text) VALUES (%s, %s, %s)",
+        (encounter_id, 'assistant', bot_reply)
+    )
     mysql.connection.commit()
 
-    # Respond with triage info
     return jsonify({
-        "questions_next": triage_result['questions_next'],
-        "patient_summary": triage_result['summary'],
-        "triage_level": triage_result['triage_level'],
-        "disposition": triage_result['disposition'],
-        "watchouts": triage_result['watchouts'],
+        "disposition": bot_reply,
+        "questions_next": [],
+        "triage_level": "",
         "telemedicine": {
             "label": "Connect to eSanjeevani",
             "url": "https://esanjeevani.mohfw.gov.in/"
@@ -188,6 +191,38 @@ def run_triage(text):
         "summary": "No red flags detected.",
         "watchouts": []
     }
+
+def mistral_response(messages, model="mistral"):
+    url = "http://localhost:11434/api/chat"
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": False
+    }
+    response = requests.post(url, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        return data["message"]["content"]
+    else:
+        print("Ollama/Mistral error:", response.text)
+        return "Sorry, the assistant is unavailable."
+
+def mistral_response_stream(messages, model="mistral"):
+    url = "http://localhost:11434/api/chat"
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": True
+    }
+    with requests.post(url, json=payload, stream=True) as response:
+        if response.status_code == 200:
+            for line in response.iter_lines():
+                if line:
+                    data = json.loads(line.decode('utf-8'))
+                    # Each chunk contains 'message' with 'content'
+                    yield data["message"]["content"]
+        else:
+            yield "Sorry, the assistant is unavailable."
 
 if __name__ == '__main__':
     app.run(debug=True)
