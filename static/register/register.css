@@ -82,7 +82,7 @@ input, select {
 }
 
 input:focus, select:focus {
-  border-color: #2ba8fb;
+  border-color: #0a93ef;
   box-shadow: 0 0 8px #2ba8fb50;
   outline: none;
 }
