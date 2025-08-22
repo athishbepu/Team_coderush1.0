@@ -152,7 +152,7 @@ def api_chat():
     mysql.connection.commit()
 
     # Prepare prompt for AI model
-    prompt = f"You are a virtual doctor assistant.if any other language than enlish reply in malayalam only \nChat history: {text}\nTriage: {triage_result['disposition']}\nPlease provide a helpful, safe, and context-aware response."
+    prompt = f"You are a virtual doctor assistant.if any other language than enlish reply in english only \nChat history: {text}\nTriage: {triage_result['disposition']}\nPlease provide a helpful, safe, and context-aware response."
     ai_reply = ollama_response(prompt, model="mistral")
 
     # Respond with triage info and AI reply
