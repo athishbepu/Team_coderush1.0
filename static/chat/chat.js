@@ -44,8 +44,9 @@ function appendMessage(text, who = 'bot') {
   wrap.appendChild(bubble);
   chatBody.appendChild(wrap);
   chatBody.scrollTop = chatBody.scrollHeight;
-  // Speak bot response if needed
-  if (who === 'bot' && window.speakBotResponse) {
+  // Always speak bot response
+  if (who === 'bot') {
+    console.log('Speaking bot response:', text);
     speakBotResponse(text);
   }
 }
@@ -215,6 +216,8 @@ function transcribeOnce() {
     msgInput.value = transcript;
     msgInput.focus();
     setTyping(false);
+    lastInputWasAudio = true;
+    console.log('Audio input received:', transcript);
   };
   recognition.onerror = function (event) {
     showError('Mic/Transcription error: ' + event.error);
