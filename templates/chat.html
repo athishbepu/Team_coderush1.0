@@ -22,20 +22,23 @@
     <div class="chat-wrapper">
       <div class="chat-card">
         <!-- Header -->
-        <div class="chat-header">
-  <div class="dot"></div>
-  <div>
-    <h6 class="m-0">Virtual Doctor Assistant</h6>
-    <small class="text-secondary">Chat · Health guidance · Triage</small>
-  </div>
-  <button id="btnAnalyze" class="btn btnAna">Analysis</button>
-  <div class="ms-auto d-flex controls">
-    ...
-  </div>
-</div>
+        <div class="chat-header d-flex align-items-center justify-content-between">
+          <div class="dot"></div>
+          <div class="flex-grow-1 text-center">
+            <h6 class="m-0">Virtual Doctor Assistant</h6>
+            <small class="text-secondary">Chat · Health guidance · Triage</small>
+          </div>
+          <div class="ms-auto d-flex controls">
+            <select id="langSelect" class="form-select mx-2" style="width: 140px;">
+              <option value="en">English</option>
+              <option value="hi">Hindi</option>
+              <option value="ta">Tamil</option>
+            </select>
+            <a href="analyse.html" class="btn btn-primary mx-2" id="btnAnalyse">Analyse</a>
+            <a href="/contact" class="btn-esanjeevani mx-2" id="btnRefer">Refer to Doctor</a>
+          </div>
         </div>
-
-        <!-- Messages -->
+  <!-- Messages -->
         <div id="chatBody" class="chat-body">
           <div class="message from-bot">
             <div class="avatar"><i class="bi bi-robot"></i></div>
@@ -100,42 +103,5 @@
 
   <!-- Custom JS -->
   <script src="../static/chat/chat.js"></script>
-  <script>
-    let encounterId = null;
-    window.onload = async function() {
-      const res = await fetch('/api/start_encounter', { method: 'POST' });
-      const data = await res.json();
-      encounterId = data.encounter_id;
-    };
-
-    async function sendMessage(message, lang) {
-      // Append user message to chat
-      appendMessage('user', message);
-
-      // Send message to server
-      const res = await fetch('/api/message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          encounter_id: encounterId,
-          locale: lang,
-          text: message
-        })
-      });
-
-      const data = await res.json();
-
-      // Check for errors
-      if (data.error) {
-        showError(data.error);
-        return;
-      }
-
-      // Append bot response to chat
-      appendMessage('bot', data.reply);
-    }
-  </script>
 </body>
 </html>

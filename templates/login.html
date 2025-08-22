@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Virtual Doctor - Login</title>
     <link rel="stylesheet" href="../static/login/login.css" />
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
   </head>
   <body>
     <main>
@@ -30,18 +31,7 @@
         </form>
       </div>  
     </main>
-    <script src="../static/login/login.js"></script>
-    <script>
-      // This script is for debugging purposes to ensure the password is being captured
-      const form = document.getElementById('loginForm');
-      form.addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent the form from submitting immediately
-        const password = document.getElementById('password').value;
-        console.log("Password received:", password);
-        // Here you would typically handle the login logic, such as sending the data to the server
-        return {"success": True, "message": "Login successful!", "redirect": "/chat"};
-      });
-    </script>
+    <!-- No JS login logic. Only regular form POST. -->
   </body>
 </html>
 

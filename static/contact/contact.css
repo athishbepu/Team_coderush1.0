@@ -1,0 +1,171 @@
+body {
+  background: radial-gradient(1200px 500px at 70% -100px, #1e293b 0%, #0b1020 60%, #050811 100%);
+  color: #e5e7eb;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.contact-container {
+  max-width: 800px;
+  margin: 40px auto;
+  background: rgba(17, 24, 39, 0.85);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  padding: 32px 24px;
+}
+
+.contact-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.header-title {
+  flex-grow: 1;
+  text-align: center;
+}
+
+.header-title h1 {
+  margin: 0;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-return {
+  background: transparent;
+  color: #02caf0;
+  border: 2px solid #0dcaf0;
+}
+
+.btn-return:hover {
+  background: #02caf0;
+  color: #000;
+}
+
+.btn-outline-green {
+  background: transparent;
+  color: #22c55e;
+  border: 2px solid #22c55e;
+}
+
+.btn-outline-green:hover {
+  background: #22c55e;
+  color: #fff;
+}
+
+.btn-outline-blue {
+  background: transparent;
+  color: #02caf0;
+  border: 2px solid #0dcaf0;
+}
+
+.btn-outline-blue:hover {
+  background: #0dcaf0;
+  color: #000;
+}
+
+.doctor-section {
+  display: flex;
+  justify-content: center;
+}
+
+.doctor-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.doctor-card {
+  background: #1f2937;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 24px 20px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.doctor-photo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #3b82f6;
+}
+
+.doctor-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.doctor-name {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #22c55e;
+}
+
+.doctor-specialty {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 1rem;
+}
+
+.doctor-links {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn-whatsapp {
+  background: #25d366;
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-whatsapp:hover {
+  background: #128c7e;
+}
+
+.btn-call {
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-call:hover {
+  background: #2563eb;
+}
+
+@media (max-width: 600px) {
+  .contact-container {
+    padding: 20px 10px;
+  }
+}

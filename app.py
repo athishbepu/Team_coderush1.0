@@ -1,3 +1,9 @@
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+import requests
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_mysqldb import MySQL
+import json
+import re
 def ollama_response(prompt, model="mistral"):
     url = "http://localhost:11434/api/generate"
     payload = {
@@ -12,13 +18,6 @@ def ollama_response(prompt, model="mistral"):
     else:
         print("Ollama error:", response.text)
         return "Sorry, the assistant is unavailable."
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
-import requests
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_mysqldb import MySQL
-import json
-import re
-
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 
@@ -29,6 +28,10 @@ mysql = MySQL(app)
 def home():
     return redirect(url_for('login'))
 
+# ------------------ CONTACT ------------------
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
 # ------------------ REGISTER ------------------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -55,11 +58,10 @@ def register():
             return {"success": False, "message": "Password cannot be empty."}
         try:
             cursor = mysql.connection.cursor()
-            hashed_password = generate_password_hash(password)
             cursor.execute("""
                 INSERT INTO users (name, email, phone, password, age, gender, location)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (name, email, phone, hashed_password, age, gender, location))
+            """, (name, email, phone, password, age, gender, location))
             mysql.connection.commit()
             return {"success": True, "message": "Registration successful!"}
         except Exception as e:
@@ -70,30 +72,51 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        # Accept both form and JSON POST, but always return HTML
         if request.is_json:
             data = request.get_json()
             username = data.get('username')
             password = data.get('password')
-            # print(username, password)
+            print("1", username, password)
         else:
             username = request.form.get('username')
             password = request.form.get('password')
-            # print(username, password)
+            print(username, password)
+
         try:
+            print("DEBUG: Attempting login with:", username)
             cursor = mysql.connection.cursor()
             cursor.execute("SELECT * FROM users WHERE email=%s OR phone=%s", (username, username))
             user = cursor.fetchone()
-            if user:
-                desc = cursor.description
-                user_dict = {desc[i][0]: user[i] for i in range(len(user))}
-                if check_password_hash(user_dict['password'], password):
+            print(type(user))
+            print("DEBUG: Query executed. Result:", user)
+            if user.values():
+                print("user value",user.values())
+                columns = [col[0] for col in cursor.description]
+                user_dict = dict(zip(columns, user.values()))
+                print("user dict:", user_dict)
+                print("DB password:", user_dict['password'])
+                print("Entered password:", password)
+                print(user_dict['password'] == password)
+                if user_dict['password'] == password:
+                    print("User authenticated successfully.")
                     session['loggedin'] = True
                     session['id'] = user_dict['id']
                     session['name'] = user_dict['name']
-                    return {"success": True, "message": "Login successful!", "redirect": "/dashboard"}
-            return {"success": False, "message": "Invalid credentials."}
+                    flash("Login successful!", "success")
+                    return redirect(url_for('chat'))
+                else:
+                    print("Password mismatch.")
+                    flash("Invalid username or password.", "danger")
+                    return render_template('login.html')
+            else:
+                print("User not found.")
+                flash("Invalid username or password.", "danger")
+                return render_template('login.html')
         except Exception as e:
-            return {"success": False, "message": f"Login failed: {str(e)}"}
+            print("Exception during login:", e)
+            flash("Login failed. Please try again.", "danger")
+            return render_template('login.html')
     return render_template('login.html')
 
 @app.route('/dashboard')
@@ -212,10 +235,6 @@ def run_triage(text):
         "watchouts": []
     }
 
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
 import requests
 
 def ollama_response(prompt, model="mistral"):
@@ -233,5 +252,8 @@ def ollama_response(prompt, model="mistral"):
         print("Ollama error:", response.text)
         return "Sorry, the assistant is unavailable."
 
-# Example usage:
-print(ollama_response("What is the meaning of life?", model="mistral"))
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+

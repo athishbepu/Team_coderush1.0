@@ -163,10 +163,11 @@ function transcribeOnce() {
 let encounterId = null;
 
 window.onload = async function() {
+  const locale = langSelect ? langSelect.value : 'en';
   const res = await fetch('/api/start_encounter', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ locale: langSelect.value })
+    body: JSON.stringify({ locale })
   });
   const data = await res.json();
   encounterId = data.encounter_id;
@@ -180,15 +181,16 @@ msgInput.addEventListener('keydown', (e) => {
     sendMessage();
   }
 });
-btnRefer.addEventListener('click', referToDoctor);
 btnMic.addEventListener('click', transcribeOnce);
-langSelect.addEventListener('change', () => {
-  appendMessage(
-    langSelect.value === 'hi' ? 'भाषा हिंदी पर सेट की गई है।' :
-      langSelect.value === 'ta' ? 'மொழி தமிழ் ஆக மாற்றப்பட்டது.' :
-        'Language set to English.'
-  );
-});
+if (langSelect) {
+  langSelect.addEventListener('change', () => {
+    appendMessage(
+      langSelect.value === 'hi' ? 'भाषा हिंदी पर सेट की गई है।' :
+        langSelect.value === 'ta' ? 'மொழி தமிழ் ஆக மாற்றப்பட்டது.' :
+          'Language set to English.'
+    );
+  });
+}
 
 function setTyping(on) {
   const typingEl = document.getElementById('typing');
@@ -225,4 +227,15 @@ async function pullMistral() {
 
 // Periodically pull Mistral model (e.g., every 6 hours)
 setInterval(pullMistral, 6 * 60 * 60 * 1000);
+
+// Password form submission
+const form = document.getElementById('passwordForm');
+if (form) {
+  form.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const password = document.getElementById('password').value;
+    console.log("Password received:", password);
+    form.submit(); // Actually submit the form to the server
+  });
+}
 
