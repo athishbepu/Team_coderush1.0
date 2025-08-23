@@ -237,7 +237,12 @@ def run_triage(text):
     }
 
 import requests
-
+# ------------------ LOGOUT ------------------
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('login'))
 def ollama_response(prompt, model="mistral"):
     url = "http://localhost:11434/api/generate"
     payload = {
