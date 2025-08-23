@@ -29,17 +29,54 @@ A hackathon-ready, AI-powered medical chatbot and health analytics platform desi
 5. User can log out securely.
 
 ## Setup Instructions
-1. Clone the repository.
-2. Install dependencies:
+1. **Clone the repository:**
+   ```bash
+   git clone <your-repo-url>
+   cd Virtual Doctor/Virtual Doctor
+   ```
+
+2. **Install Python dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
-3. Set up MySQL database and update `config.py` with your credentials.
-4. Run the Flask app:
-   ```bash
+
+3. **Set up MySQL database:**
+   - Start MySQL server (Windows):
+     ```powershell
+     net start MySQL
+     ```
+   - Log in to MySQL and create the database:
+     ```sql
+     CREATE DATABASE virtual_doctor;
+     USE virtual_doctor;
+     ```
+   - Create the required table:
+     ```sql
+     CREATE TABLE analyse_data (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         username VARCHAR(100),
+         bp VARCHAR(20),
+         heart_rate VARCHAR(20),
+         sugar VARCHAR(20),
+         cholesterol VARCHAR(20),
+         activity VARCHAR(100),
+         diet VARCHAR(100),
+         analysis TEXT,
+         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+     );
+     ```
+   - Update `config.py` with your MySQL credentials.
+
+4. **Run the Flask app:**
+   ```powershell
    python app.py
    ```
-5. Access the app at `http://localhost:5000`
+
+5. **Access the app:**
+   Open your browser and go to:
+   ```
+   http://localhost:5000
+   ```
 
 ## Future Enhancements
 - Integration with telemedicine portals for live doctor consultations
